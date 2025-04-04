@@ -12,8 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def get_check_file_dir() -> str:
-    curr_dir = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(curr_dir, 'change_tracking')
+    return os.path.join(os.getcwd(), 'change_tracking')
 
 
 def update_hash_file(file_name, sfv_file_name='') -> str:
