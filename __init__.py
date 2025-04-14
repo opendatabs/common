@@ -240,6 +240,35 @@ def get_dataset_status(dataset_uid):
     return response.json()['is_published'], response.json()['status'], response.json()['since']
 
 
+def publish_ods_dataset_by_id(dataset_id: str, unpublish_first=False):
+    dataset_uid = get_ods_uid_by_id(dataset_id)
+    publish_ods_dataset(dataset_uid, unpublish_first=unpublish_first)
+
+
+def unpublish_ods_dataset_by_id(dataset_id: str):
+    dataset_uid = get_ods_uid_by_id(dataset_id)
+    unpublish_ods_dataset(dataset_uid)
+
+
+def ods_set_general_access_policy(dataset_id: str, access_should_be_restricted: bool, do_publish=True):
+    dataset_uid = get_ods_uid_by_id(dataset_id)
+    logging.info(f'Getting General Access Policy before setting it...')
+    url = f'https://data.bs.ch/api/automation/v1.0/datasets/{dataset_uid}/'
+    r = requests_get(url=url, headers={'Authorization': f'apikey {ODS_API_KEY}'})
+    r.raise_for_status()
+    is_currently_restricted = r.json()['is_restricted']
+    do_change_policy = is_currently_restricted != access_should_be_restricted
+    logging.info(f'Current access policy: {is_currently_restricted}. Do we have to change that? {do_change_policy}.')
+    if do_change_policy:
+        logging.info(f'Setting General Access Policy to is_restricted={access_should_be_restricted}...')
+        r = requests_put(url=url, data={'is_restricted': access_should_be_restricted}, headers={'Authorization': f'apikey {ODS_API_KEY}'})
+        r.raise_for_status()
+        if do_publish:
+            logging.info(f'Publishing dataset...')
+            publish_ods_dataset(dataset_uid)
+    return do_change_policy, r
+
+
 def raise_response_error(response):
     logging.info(f'Received http error {response.status_code}:')
     logging.info(f'Error message: {response.text}')
@@ -471,11 +500,11 @@ def update_ftp_and_odsp(path_export: str, folder_name: str, dataset_id: str, ftp
         ftp_server (str): The FTP server address.
         ftp_user (str): The FTP user name.
         ftp_pass (str): The FTP password.
+        unpublish_first (bool): If True, the dataset will be unpublished before publishing it again.
     """
     if change_tracking.has_changed(path_export):
         upload_ftp(path_export, ftp_server, ftp_user, ftp_pass, folder_name)
-        dataset_uid = get_ods_uid_by_id(dataset_id)
-        publish_ods_dataset(dataset_uid, unpublish_first=unpublish_first)
+        publish_ods_dataset_by_id(dataset_id, unpublish_first=unpublish_first)
         change_tracking.update_hash_file(path_export)
 
 
