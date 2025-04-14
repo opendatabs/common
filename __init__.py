@@ -10,10 +10,11 @@ import fnmatch
 import logging
 import dateutil
 import smtplib
-from more_itertools import chunked
 
+from more_itertools import chunked
 from common import credentials
 from common import change_tracking
+from common.pdf2md import Converter
 from common.retry import retry
 import ods_publish.etl_id as odsp
 from email.mime.text import MIMEText
@@ -466,7 +467,7 @@ def update_ftp_and_odsp(path_export: str, folder_name: str, dataset_id: str, ftp
         change_tracking.update_hash_file(path_export)
 
 
-def create_indices(conn, table_name, columns_to_index):
+def create_indices(conn, table_name, columns_to_index=None):
     """
     Create indices for specified columns in a SQLite table.
 
@@ -475,6 +476,8 @@ def create_indices(conn, table_name, columns_to_index):
         table_name (str): Name of the table to add indices to.
         columns_to_index (list): List of column names to index.
     """
+    if columns_to_index is None:
+        columns_to_index = []
     logging.info(f'Adding indices to SQLite table {table_name}...')
     with conn:
         for col in columns_to_index:
@@ -499,3 +502,31 @@ def is_file_locked(file_path):
         return True
 
 
+def convert_pdf_to_md(pdf_url, pdf_path, prefix):
+    # Download the PDF
+    logging.info(f"   Downloading PDF: {pdf_url}")
+    try:
+        r_pdf = requests_get(pdf_url)
+        with open(pdf_path, "wb") as file:
+            for chunk in r_pdf.iter_content(chunk_size=1024):
+                file.write(chunk)
+        print(f"PDF downloaded successfully as {pdf_path}")
+    except:
+        print("Failed to download PDF.")
+        return dict()
+
+    # Convert the PDF to Markdown
+    methods = ["docling", "pymupdf4llm", "pymupdf"]
+    markdowns = {}
+    for m in methods:
+        converter = Converter(lib=m, input_file=pdf_path)
+        try:
+            converter.convert()
+            markdown_path = converter.output_file
+            with open(markdown_path, "r", encoding="utf-8") as f:
+                markdowns[f'{prefix}_{m}'] = f.read()
+        except:
+            logging.error(f"Failed to convert PDF using method: {m}")
+            continue
+
+    return markdowns
