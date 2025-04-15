@@ -1,0 +1,16 @@
+docling>=2.30.0
+filehash>=0.2.dev1
+hatchling>=1.27.0
+markdown>=3.8
+mistralai>=1.6.0
+more-itertools>=10.6.0
+openai>=1.73.0
+pandas>=2.2.3
+pdf2image>=1.17.0
+pdfkit>=1.0.0
+pdfplumber>=0.11.6
+pymupdf>=1.25.5
+pymupdf4llm>=0.0.21
+pypandoc>=1.15
+python-dotenv>=1.1.0
+requests>=2.32.3
