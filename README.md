@@ -11,20 +11,20 @@ You can install this package using either `pip` or [`uv`](https://github.com/ast
 ### Install with `uv`
 
 ```bash
-uv pip install "git+https://github.com/opendatabs/common"
+uv add "git+https://github.com/opendatabs/common"
 ```
 
 You can also install a specific tag, commit, or branch:
 
 ```bash
 # Install from a specific tag
-uv pip install "git+https://github.com/opendatabs/common@v0.1.0"
+uv add "git+https://github.com/opendatabs/common@v0.1.0"
 
 # Install from a specific commit
-uv pip install "git+https://github.com/opendatabs/common@<commit-sha>"
+uv add "git+https://github.com/opendatabs/common@<commit-sha>"
 
 # Install from a branch (e.g., main)
-uv pip install "git+https://github.com/opendatabs/common@main"
+uv add "git+https://github.com/opendatabs/common@main"
 ```
 
 ### Install with `pip`
