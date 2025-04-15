@@ -52,10 +52,8 @@ To work on this package locally:
 
 ```bash
 git clone https://github.com/opendatabs/common.git
-cd common
-uv venv  # or use python -m venv .venv
+uv sync
 source .venv/bin/activate
-uv pip install -e .
 ```
 
 ## License
