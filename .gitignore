@@ -1,4 +1,16 @@
-.idea
+# Python-generated files
 __pycache__/
-**/credentials.py
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
 **/*.sfv
+
+# Virtual environments
+.venv
+
+# Environment variables
+.env
+*.env
+**/credentials.py
