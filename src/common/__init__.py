@@ -29,7 +29,6 @@ except ImportError:
 
 load_dotenv()
 ODS_API_KEY = os.getenv('ODS_API_KEY')
-PROXIES = json.loads(os.getenv('PROXIES', '{}'))
 EMAIL_RECEIVERS = json.loads(os.getenv('EMAIL_RECEIVERS', '[]'))
 EMAIL_SERVER = os.getenv('EMAIL_SERVER')
 EMAIL = os.getenv('EMAIL')
@@ -45,35 +44,35 @@ ftp_errors_to_handle = ftplib.error_temp, ftplib.error_perm, BrokenPipeError, Co
 
 @retry(http_errors_to_handle, tries=6, delay=5, backoff=1)
 def requests_get(*args, **kwargs):
-    r = requests.get(*args, proxies=PROXIES, **kwargs)
+    r = requests.get(*args, **kwargs)
     r.raise_for_status()
     return r
 
 
 @retry(http_errors_to_handle, tries=6, delay=5, backoff=1)
 def requests_post(*args, **kwargs):
-    r = requests.post(*args, proxies=PROXIES, **kwargs)
+    r = requests.post(*args, **kwargs)
     r.raise_for_status()
     return r
 
 
 @retry(http_errors_to_handle, tries=6, delay=5, backoff=1)
 def requests_patch(*args, **kwargs):
-    r = requests.patch(*args, proxies=PROXIES, **kwargs)
+    r = requests.patch(*args, **kwargs)
     r.raise_for_status()
     return r
 
 
 @retry(http_errors_to_handle, tries=6, delay=5, backoff=1)
 def requests_put(*args, **kwargs):
-    r = requests.put(*args, proxies=PROXIES, **kwargs)
+    r = requests.put(*args, **kwargs)
     r.raise_for_status()
     return r
 
 
 @retry(http_errors_to_handle, tries=6, delay=5, backoff=1)
 def requests_delete(*args, **kwargs):
-    r = requests.delete(*args, proxies=PROXIES, **kwargs)
+    r = requests.delete(*args, **kwargs)
     r.raise_for_status()
     return r
 
