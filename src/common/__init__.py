@@ -12,6 +12,7 @@ import logging
 import dateutil
 import smtplib
 from more_itertools import chunked
+from zoneinfo import ZoneInfo
 
 from common import change_tracking
 from common.retry import retry
@@ -21,11 +22,6 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-# see https://pypi.org/project/backports.zoneinfo/
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports import zoneinfo
 
 load_dotenv()
 ODS_API_KEY = os.getenv('ODS_API_KEY')
