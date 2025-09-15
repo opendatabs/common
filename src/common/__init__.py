@@ -31,7 +31,7 @@ EMAIL = os.getenv('EMAIL')
 FTP_SERVER = os.getenv('FTP_SERVER')
 FTP_USER = os.getenv('FTP_USER')
 FTP_PASS = os.getenv('FTP_PASS')
-API_KEY_MAPB = os.getenv('API_KEY_MAPB')
+API_KEY_MAPBS = os.getenv('API_KEY_MAPBS')
 
 
 weekdays_german = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
@@ -537,7 +537,7 @@ def is_file_locked(file_path):
         return True
 
 
-def get_koordinat(address: str, number: str | int) -> tuple[str | None, str | None]:
+def get_coordinate(address: str, number: str | int) -> tuple[str | None, str | None]:
 
     # Build the address string and parameters for the API request
     addr_str = f"{address} {number}".strip()
@@ -546,7 +546,7 @@ def get_koordinat(address: str, number: str | int) -> tuple[str | None, str | No
         "maxresults": "1",        
         "partitionlimit": "1",    
         "outputformat": "centroid",  
-        "apikey": API_KEY_MAPB,    
+        "apikey": API_KEY_MAPBS,    
     }
 
     logging.info(f'get_koordinat: Request started for "{addr_str}".')
