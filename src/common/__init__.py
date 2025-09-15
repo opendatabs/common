@@ -31,6 +31,7 @@ EMAIL = os.getenv('EMAIL')
 FTP_SERVER = os.getenv('FTP_SERVER')
 FTP_USER = os.getenv('FTP_USER')
 FTP_PASS = os.getenv('FTP_PASS')
+API_KEY_MAPB = os.getenv('API_KEY_MAPB')
 
 
 weekdays_german = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
@@ -534,3 +535,43 @@ def is_file_locked(file_path):
             return False
     except PermissionError:
         return True
+
+
+def get_koordinat(address: str, number: str | int) -> tuple[str | None, str | None]:
+
+    # Build the address string and parameters for the API request
+    addr_str = f"{address} {number}".strip()
+    params = {
+        "term": addr_str,
+        "maxresults": "1",        
+        "partitionlimit": "1",    
+        "outputformat": "centroid",  
+        "apikey": API_KEY_MAPB,    
+    }
+
+    logging.info(f'get_koordinat: Request started for "{addr_str}".')
+
+    try:
+        r = requests_get("https://api.geo.bs.ch/search/v1/search", params=params)
+        data = r.json()
+    except Exception as e:
+        logging.exception(f'get_koordinat: Error fetching/parsing response for "{addr_str}": {e}')
+        return None, None
+
+    if not data:
+        logging.warning(f'get_koordinat: No results for "{addr_str}".')
+        return None, None
+
+    # Extract the geometry field (expected format: "POINT (x y)")
+    geom = data[0].get("geom")
+
+    try:
+        # Parse the "POINT (x y)" string into coordinates
+        coords_str = geom.replace("POINT (", "").replace(")", "").strip()
+        x, y = coords_str.split()
+
+        logging.info(f'get_koordinat: Success for "{addr_str}" → x={x}, y={y}.')
+        return x, y
+    except Exception as e:
+        logging.exception(f'get_koordinat: Error parsing geometry "{geom}" for "{addr_str}": {e}')
+        return None, None
