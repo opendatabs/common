@@ -52,9 +52,21 @@ To work on this package locally:
 
 ```bash
 git clone https://github.com/opendatabs/common.git
+cd common
 uv sync
-source .venv/bin/activate
 ```
+
+- **macOS / Linux:**
+
+  ```bash
+  source .venv/bin/activate
+  ```
+
+- **Windows (PowerShell):**
+
+  ```powershell
+  .venv\Scripts\Activate.ps1
+  ```
 
 ## License
 
