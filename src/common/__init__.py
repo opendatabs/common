@@ -23,6 +23,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import re
+from pyproj import Transformer
 
 load_dotenv()
 ODS_API_KEY = os.getenv('ODS_API_KEY')
@@ -612,4 +613,46 @@ def get_coordinates(street: str, number: str | int) -> tuple[str | None, str | N
             return None, None
     logging.warning(f'get_coordinate: No exact match for "{addr_str}"')
     return None, None
+
+def create_navi_link(x: str|float = None, y: str|float = None, street: str = None, number: str|int = None) -> str:
+
+    lv95_to_wgs84 = Transformer.from_crs("EPSG:2056", "EPSG:4326", always_xy=True)
+    """
+    Creates a map link.
+    - If street+number → coordinates from API (LV95 → WGS84)
+    - If x,y → autodetect (WGS84 or Swiss coordinates)
+    """
+    if x is None and y is None and street is None and number is None:
+        raise ValueError("At least one parameter must be provided.")
+    if street is not None and number is None:
+        raise ValueError("If address is provided, number must also be provided.")
+    if x is not None and y is None:
+        raise ValueError("If x is provided, y must also be provided.")
+    if y is not None and x is None:
+        raise ValueError("If y is provided, x must also be provided.")
+
+    if street:
+        e, n = get_coordinates(street, number) 
+        if e is None or n is None:
+            raise ValueError(f"Could not geocode '{street} {number}'")
+        lon, lat = lv95_to_wgs84.transform(float(e), float(n))
+    else:
+        x_f, y_f = float(x), float(y)
+
+        if -90 <= x_f <= 90 and -180 <= y_f <= 180:
+            # Looks like WGS84 (lat, lon)
+            lat, lon = x_f, y_f
+        elif 2_480_000 <= x_f <= 2_840_000 and 1_075_000 <= y_f <= 1_296_000:
+            # LV95
+            lon, lat = lv95_to_wgs84.transform(x_f, y_f)
+        elif 480_000 <= x_f <= 840_000 and 70_000 <= y_f <= 300_000:
+            # LV03 → first shift to LV95
+            e_lv95, n_lv95 = x_f + 2_000_000, y_f + 1_000_000
+            lon, lat = lv95_to_wgs84.transform(e_lv95, n_lv95)
+        else:
+            raise ValueError(f"Coordinates ({x}, {y}) not recognized as WGS84 or Swiss system")
+        
+    url = f"https://opendatabs.github.io/map-links/?lat={lat}&lon={lon}"
+    return url
+
 
