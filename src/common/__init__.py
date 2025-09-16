@@ -22,6 +22,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
+import re
 
 load_dotenv()
 ODS_API_KEY = os.getenv('ODS_API_KEY')
@@ -537,10 +538,42 @@ def is_file_locked(file_path):
         return True
 
 
-def get_coordinate(address: str, number: str | int) -> tuple[str | None, str | None]:
+def get_coordinates(street: str, number: str | int) -> tuple[str | None, str | None]:
 
-    # Build the address string and parameters for the API request
-    addr_str = f"{address} {number}".strip()
+    def _normalize(street, number) -> str:
+
+        street = street.strip().lower()
+        street = street.replace("ß", "ss")
+    
+        # normalize str. or str at the end
+        if street.endswith("str.") or street.endswith("str"):
+            street = re.sub(r"str\.?$", "strasse", street)
+
+        number = str(number or "").strip().lower().replace(" ", "")
+        return street, number
+    def address_exact_match(req_street: str, req_number: str|int,
+                        res_street: str, res_number: str|int) -> bool:
+
+        ns_req, nn_req = _normalize(req_street, req_number)
+        ns_res, nn_res = _normalize(res_street, res_number)
+
+        return ns_req == ns_res and nn_req == nn_res
+    
+
+    def _parse_label(label: str):
+        """
+        extrac (str, hausnr)
+        """
+        left = label.split(',', 1)[0].strip()
+        m = re.match(r"^(.*\S)\s+(\d+[a-zA-Z]?)$", left)
+        if not m:
+            return None
+        street, number= m.groups()
+        return street, number
+
+
+    # Build the street string and parameters for the API request
+    addr_str = f"{street} {number}".strip()
     params = {
         "term": addr_str,
         "maxresults": "1",        
@@ -549,7 +582,7 @@ def get_coordinate(address: str, number: str | int) -> tuple[str | None, str | N
         "apikey": API_KEY_MAPBS,    
     }
 
-    logging.info(f'get_koordinat: Request started for "{addr_str}".')
+    logging.info(f'get_coordinates: Request started for "{addr_str}".')
 
     try:
         r = requests_get("https://api.geo.bs.ch/search/v1/search", params=params)
@@ -562,16 +595,21 @@ def get_coordinate(address: str, number: str | int) -> tuple[str | None, str | N
         logging.warning(f'get_koordinat: No results for "{addr_str}".')
         return None, None
 
-    # Extract the geometry field (expected format: "POINT (x y)")
-    geom = data[0].get("geom")
+    label = data[0].get("label", "")
+    res_street, res_number  = _parse_label(label)
 
-    try:
-        # Parse the "POINT (x y)" string into coordinates
-        coords_str = geom.replace("POINT (", "").replace(")", "").strip()
-        x, y = coords_str.split()
 
-        logging.info(f'get_koordinat: Success for "{addr_str}" → x={x}, y={y}.')
-        return x, y
-    except Exception as e:
-        logging.exception(f'get_koordinat: Error parsing geometry "{geom}" for "{addr_str}": {e}')
-        return None, None
+    if address_exact_match(street, number, res_street, res_number):
+        # Extract the geometry field (expected format: "POINT (x y)")
+        point = data[0].get("geom")
+        try:
+            coords_str = point.replace("POINT (", "").replace(")", "").strip()
+            x, y = coords_str.split()
+            logging.info(f'get_coordinate: Success for "{addr_str}" → x={x}, y={y}.')
+            return x, y
+        except Exception as e:
+            logging.exception(f'get_coordinate: Error parsing geometry "{point}" for "{addr_str}": {e}')
+            return None, None
+    logging.warning(f'get_coordinate: No exact match for "{addr_str}"')
+    return None, None
+
