@@ -654,5 +654,3 @@ def create_navi_link(x: str|float = None, y: str|float = None, street: str = Non
         
     url = f"https://opendatabs.github.io/map-links/?lat={lat}&lon={lon}"
     return url
-
-

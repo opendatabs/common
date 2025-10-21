@@ -1,6 +1,6 @@
 [project]
 name = "common"
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -10,6 +10,7 @@ dependencies = [
     "pyproj>=3.7.2",
     "python-dotenv>=1.1.0",
     "requests>=2.32.3",
+    "shapely>=2.1.2",
 ]
 
 [build-system]
